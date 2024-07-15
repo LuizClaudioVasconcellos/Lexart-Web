@@ -11,11 +11,17 @@ const GridContainer = styled.ul`
   gap: 20px;
 `;
 
-const ProductGrid = ({ products, onDelete }) => {
+const ProductGrid = ({ products, onDelete, onEdit, onImageClick }) => {
   return (
     <GridContainer>
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} onDelete={onDelete} />
+        <ProductCard
+          key={product.id}
+          product={product}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          onImageClick={onImageClick}
+        />
       ))}
     </GridContainer>
   );

@@ -8,6 +8,10 @@ import ProductGrid from "../components/ProductGrid";
 import Pagination from "../components/Pagination";
 import DeleteAllProducts from "../components/DeleteAllProducts";
 import { sendMessageToWebSocketClients } from "../services/websocket";
+import { FaBoxOpen } from "react-icons/fa"; // Importa o ícone de caixa aberta
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import ProductModal from "../components/ProductModal";
 
 const fadeIn = keyframes`
   from {
@@ -30,6 +34,26 @@ const Title = styled.h1`
   margin-bottom: 20px;
 `;
 
+const MessageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 20px;
+`;
+
+const Message = styled.p`
+  color: #555;
+  font-size: 18px;
+  text-align: center;
+  margin-top: 20px;
+`;
+
+const Icon = styled(FaBoxOpen)`
+  color: #555;
+  font-size: 50px;
+  margin-top: 10px;
+`;
+
 const Products = () => {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,6 +61,8 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [deletingAll, setDeletingAll] = useState(false); // Estado para controlar se está deletando todos os produtos
+  const [product, setProduct] = useState({}); // Estado para controlar se está deletando todos os produtos
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   const fetchProducts = async () => {
     try {
@@ -64,12 +90,31 @@ const Products = () => {
     fetchProducts();
   }, []);
 
+  const handleEdit = async (id) => {
+    try {
+      const response = await api.get(`/products/${id}`);
+      if (response.status === 200) {
+        toggleForm();
+        setProduct(response.data);
+      } else {
+        setProduct({});
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   const handleDelete = async (id) => {
     try {
-      await api.delete(`/products/${id}`);
-      setProducts(products.filter((product) => product.id !== id));
+      const response = await api.delete(`/products/${id}`);
+      if (response.status === 204) {
+        setProducts(products.filter((product) => product.id !== id));
+        toast.success("Product delete sucess");
+      } else {
+        toast.error("Delete product error");
+      }
     } catch (error) {
-      console.error("Error deleting product:", error);
+      console.error(error);
     }
   };
 
@@ -83,30 +128,49 @@ const Products = () => {
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentProducts = products
     .filter((product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      product?.name?.toLowerCase()?.includes(searchTerm.toLowerCase())
     )
     .slice(indexOfFirstItem, indexOfLastItem);
 
   const totalPages = Math.ceil(
     products.filter((product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      product?.name?.toLowerCase()?.includes(searchTerm.toLowerCase())
     ).length / itemsPerPage
   );
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const toggleForm = () => setShowForm(!showForm);
+  const toggleForm = () => {
+    setProduct({});
+    setShowForm(!showForm);
+  };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (data, onClose) => {
+    const hasEdit = product.id;
     try {
       setLoading(true); // Inicia o estado de loading
-      const response = await api.post("/products", data);
-      setProducts([...products, response.data]);
-      setShowForm(false);
-      // Exibir Toast de sucesso
+      const response = hasEdit
+        ? await api.put(`/products/${product.id}`, data)
+        : await api.post("/products", data);
+      console.log(response);
+      if (response.status === 201 || response.status === 200) {
+        const filteredProducts = products.filter(
+          (item) => item.id !== product.id
+        );
+        setProducts([...filteredProducts, response.data]);
+        setShowForm(false);
+        toast.success(`Product ${hasEdit ? "edited" : "added"} successfully!`);
+        onClose();
+      } else {
+        toast.error(
+          `Failed to ${hasEdit ? "edit" : "add"} product. Please try again.`
+        );
+      }
     } catch (error) {
-      console.error("Error adding product:", error);
-      // Exibir Toast de erro
+      console.error(`Error adding product:`, error);
+      toast.error(
+        `Error ${hasEdit ? "editing" : "adding"} product: ${error.message}`
+      );
     } finally {
       setLoading(false); // Finaliza o estado de loading após a operação
     }
@@ -139,6 +203,10 @@ const Products = () => {
     setProducts([...products, ...newProducts]);
   };
 
+  const closeModal = () => {
+    setSelectedProduct(null);
+  };
+
   if (loading) {
     return <Loading />;
   }
@@ -152,19 +220,39 @@ const Products = () => {
         deletingAll={deletingAll}
         fetchProducts={fetchProducts}
       />
-      <ProductGrid products={currentProducts} onDelete={handleDelete} />
-      <Pagination
-        totalPages={totalPages}
-        currentPage={currentPage}
-        onPageChange={paginate}
-      />
+      {products.length === 0 ? (
+        <MessageContainer>
+          <Message>Nenhum produto registrado</Message>
+          <Icon />
+        </MessageContainer>
+      ) : (
+        <>
+          <ProductGrid
+            products={currentProducts}
+            onDelete={handleDelete}
+            onEdit={handleEdit}
+            onImageClick={setSelectedProduct}
+          />
+          {totalPages > 1 && (
+            <Pagination
+              totalPages={totalPages}
+              currentPage={currentPage}
+              onPageChange={paginate}
+            />
+          )}
+        </>
+      )}
       {showForm && (
         <FloatingForm
           onSubmit={onSubmit}
           onClose={toggleForm}
           onProductsAdded={onProductsAdded}
           fetchProducts={fetchProducts}
+          editValue={product}
         />
+      )}
+      {selectedProduct && (
+        <ProductModal product={selectedProduct} onClose={closeModal} />
       )}
     </Container>
   );

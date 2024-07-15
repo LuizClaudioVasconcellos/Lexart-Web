@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import styled from "styled-components";
 import { useForm } from "react-hook-form";
 import AddIcon from "@mui/icons-material/Add";
@@ -114,29 +114,25 @@ const FloatingForm = ({
   onClose,
   onProductsAdded,
   fetchProducts,
+  editValue,
 }) => {
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm();
+  } = useForm({
+    defaultValues: {
+      name: editValue.name,
+      price: editValue.price,
+      description: editValue.description,
+    },
+  });
 
   const submitForm = async (data) => {
     try {
-      const response = await onSubmit(data);
-
-      console.log("response", response);
-
-      if (response.status === 200) {
-        toast.success("Product added successfully!");
-        onClose();
-        onProductsAdded(data);
-      } else {
-        toast.error("Failed to add product. Please try again.");
-      }
+      await onSubmit(data, onClose);
     } catch (err) {
       console.error("Error submitting form:", err);
-      // toast.error("Failed to add product. Please try again.");
     }
   };
 
@@ -150,23 +146,26 @@ const FloatingForm = ({
       } else {
         toast.error("Failed to add product. Please try again.");
       }
-      // onProductsAdded();
+      onProductsAdded();
     } catch (err) {
       console.error("Error adding test products:", err);
-      // toast.error("Failed to add test products. Please try again.");
     }
   };
+
+  const hasEdit = editValue.id;
 
   return (
     <>
       <Overlay onClick={onClose} />
       <FormContainer>
         <TitleContainer>
-          <h2>Add Product</h2>
-          <AddTestButton onClick={handleAddTestProducts}>
-            <AddIcon />
-            <AddTestButtonText>Add Test Products</AddTestButtonText>
-          </AddTestButton>
+          <h2>{hasEdit ? "Edit" : "Add"} Product</h2>
+          {!hasEdit && (
+            <AddTestButton onClick={handleAddTestProducts}>
+              <AddIcon />
+              <AddTestButtonText>Add Test Products</AddTestButtonText>
+            </AddTestButton>
+          )}
         </TitleContainer>
         <form onSubmit={handleSubmit(submitForm)}>
           <FormGroup>
@@ -221,7 +220,7 @@ const FloatingForm = ({
             <Button type="button" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit">Add Product</Button>
+            <Button type="submit">{hasEdit ? "Edit" : "Add"} Product</Button>
           </ButtonContainer>
         </form>
       </FormContainer>

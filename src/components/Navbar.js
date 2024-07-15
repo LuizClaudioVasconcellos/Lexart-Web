@@ -1,6 +1,8 @@
-import React from "react";
-import { NavLink } from "react-router-dom";
+import React, { useContext } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import AuthContext from "../context/AuthContext";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 const Nav = styled.nav`
   background-color: #333;
@@ -11,7 +13,7 @@ const Nav = styled.nav`
 `;
 
 const Logo = styled.img`
-  width: 100px;
+  width: 200px;
   margin-left: 40px;
 `;
 
@@ -31,6 +33,8 @@ const NavLinkStyled = styled(NavLink)`
   text-decoration: none;
   padding: 5px 10px;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
 
   &.active {
     background-color: #555;
@@ -39,12 +43,27 @@ const NavLinkStyled = styled(NavLink)`
   &:hover {
     background-color: #555;
   }
+  .button {
+    background-color: transparent;
+  }
 `;
 
 const Navbar = () => {
+  const navigate = useNavigate();
+
+  const { logout } = useContext(AuthContext);
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login"); // Redireciona para a página de login
+  };
+
   return (
     <Nav>
-      <Logo src="/path/to/your/logo.png" alt="Logo" />{" "}
+      <Logo
+        src="https://dev-lexart-corp-site.pantheonsite.io/wp-content/uploads/2022/12/lex-white.svg"
+        alt="Logo"
+      />
       <NavList>
         <NavItem>
           <NavLinkStyled to="/products">Products</NavLinkStyled>
@@ -58,7 +77,9 @@ const Navbar = () => {
           <NavLinkStyled to="/logs">Logs</NavLinkStyled>
         </NavItem>
         <NavItem>
-          <NavLinkStyled to="/logout">Logout</NavLinkStyled>
+          <NavLinkStyled to="/login" onClick={handleLogout}>
+            <LogoutIcon style={{ marginRight: "5px" }} />
+          </NavLinkStyled>
         </NavItem>
       </NavList>
     </Nav>

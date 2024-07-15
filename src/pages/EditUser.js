@@ -1,17 +1,18 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import api from "../services/api";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Loading from "../components/Loading";
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  height: 87.5vh;
   background-color: #f5f5f5;
 `;
 
@@ -57,73 +58,91 @@ const ErrorMessage = styled.p`
   margin-bottom: 15px;
 `;
 
-const SwitchLink = styled(Link)`
-  margin-top: 10px;
-  color: #007bff;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const Register = () => {
+const EditUser = () => {
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm();
   const [error, setError] = useState("");
   const history = useNavigate();
+  const { id } = useParams();
+  const [user, setUser] = useState({});
 
   const onSubmit = async (data) => {
+    if (!data.password) {
+      delete data.password;
+    }
     try {
-      const response = await api.post("/users/register/internal", data);
-      console.log(response);
-      if (response.status === 201) {
-        toast.success("Users resgitration successfully!");
-        history("/login");
+      const response = await api.put(`/users/${id}`, data);
+      if (response.status === 200) {
+        toast.success("User edited successfully!");
+        history("/users");
       } else {
-        setError("Registration failed. Please try again.");
-        toast.error("Users resgitration failed");
+        setError("Editing failed. Please try again.");
+        toast.error("User editing failed");
       }
     } catch (err) {
-      // setError("Registration failed. Please try again.");
       console.error(err);
-      toast.error("Users resgitration failed!");
+      toast.error("User editing failed!");
     }
   };
 
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const response = await api.get(`/users/${id}`);
+        if (response.status === 200) {
+          setUser(response.data);
+          setValue("name", response.data.name);
+          setValue("email", response.data.email);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (id) {
+      getUser();
+    }
+  }, [id, setValue]);
+
+  if (!user.name) {
+    return <Loading />;
+  }
+
   return (
     <Container>
-      <Title>Register</Title>
+      <Title>Edit User</Title>
       <Form onSubmit={handleSubmit(onSubmit)}>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         <Input
           type="text"
           placeholder="Name"
+          defaultValue={user.name}
           {...register("name", { required: "Name is required" })}
         />
         {errors.name && <ErrorMessage>{errors.name.message}</ErrorMessage>}
         <Input
           type="email"
           placeholder="Email"
+          defaultValue={user.email}
           {...register("email", { required: "Email is required" })}
         />
         {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
         <Input
           type="password"
           placeholder="Password"
-          {...register("password", { required: "Password is required" })}
+          {...register("password")}
         />
         {errors.password && (
           <ErrorMessage>{errors.password.message}</ErrorMessage>
         )}
-        <Button type="submit">Register</Button>
+        <Button type="submit">Confirm</Button>
       </Form>
-      <SwitchLink to="/login">Already have an account? Login</SwitchLink>
     </Container>
   );
 };
 
-export default Register;
+export default EditUser;

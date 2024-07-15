@@ -1,15 +1,18 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import styled from "styled-components";
 import api from "../services/api";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import AuthContext from "../context/AuthContext";
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 89.5vh;
+  height: 100vh;
   background-color: #f5f5f5;
 `;
 
@@ -74,13 +77,21 @@ const Login = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
+  const { login } = useContext(AuthContext);
+
   const onSubmit = async (data) => {
     try {
       const response = await api.post("/users/auth", data);
-      localStorage.setItem("token", response.data.token);
-      navigate("/");
+      if (response.status === 200) {
+        login(response.data.token);
+        toast.success("Sucess Login!");
+        navigate("/");
+      } else {
+        setError("Failed Login");
+        toast.error("Failed Login!");
+      }
     } catch (err) {
-      setError("Login failed. Please check your credentials.");
+      console.error(err);
     }
   };
 

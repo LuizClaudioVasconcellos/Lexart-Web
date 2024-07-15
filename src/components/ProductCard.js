@@ -1,6 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom";
 import styled from "styled-components";
+import productImage from "../images/image.png";
 
 const GridItem = styled.li`
   background-color: #fff;
@@ -18,6 +18,11 @@ const ProductImage = styled.img`
   max-width: 200px;
   height: auto;
   margin-bottom: 10px;
+`;
+
+const ProductDetails = styled.div`
+  padding: 10px;
+  text-align: center;
 `;
 
 const ProductName = styled.h3`
@@ -59,21 +64,24 @@ const IconButton = styled.button`
   }
 `;
 
-const ProductCard = ({ product, onDelete }) => {
+const ProductCard = ({ product, onDelete, onEdit, onImageClick }) => {
   return (
     <GridItem>
-      <ProductImage src={product.image} alt={product.name} />
+      <ProductImage
+        src={productImage}
+        alt={product.name}
+        onClick={() => onImageClick(product)}
+      />
       <ProductName>{product.name}</ProductName>
       <ProductPrice>${product.price}</ProductPrice>
       <ButtonContainer>
-        <Link
-          style={{ textDecoration: "none" }}
-          to={`/edit-product/${product.id}`}
+        <IconButton
+          color="#007bff"
+          hoverColor="#0056b3"
+          onClick={() => onEdit(product.id)}
         >
-          <IconButton color="#007bff" hoverColor="#0056b3">
-            <i className="material-icons">edit</i>Edit
-          </IconButton>
-        </Link>
+          <i className="material-icons">edit</i>Edit
+        </IconButton>
         <IconButton
           onClick={() => onDelete(product.id)}
           color="#dc3545"
