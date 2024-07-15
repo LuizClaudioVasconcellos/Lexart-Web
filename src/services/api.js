@@ -4,7 +4,7 @@ import { useContext } from "react";
 import AuthContext from "../context/AuthContext";
 
 const api = axios.create({
-  baseURL: "http://localhost:3333",
+  baseURL: "https://lexart.onrender.com",
 });
 
 api.interceptors.request.use((config) => {

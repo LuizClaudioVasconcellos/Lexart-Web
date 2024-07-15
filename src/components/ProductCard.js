@@ -20,11 +20,6 @@ const ProductImage = styled.img`
   margin-bottom: 10px;
 `;
 
-const ProductDetails = styled.div`
-  padding: 10px;
-  text-align: center;
-`;
-
 const ProductName = styled.h3`
   text-align: center;
   margin-bottom: 5px;

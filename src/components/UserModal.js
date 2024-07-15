@@ -1,7 +1,6 @@
 // src/components/ProductModal.js
 import React from "react";
 import styled from "styled-components";
-import productImage from "../images/image.png";
 
 const ModalOverlay = styled.div`
   position: fixed;
