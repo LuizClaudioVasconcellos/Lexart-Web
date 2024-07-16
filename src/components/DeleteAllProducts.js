@@ -44,7 +44,7 @@ const DeleteAllProducts = ({ fetchProducts }) => {
 
   useEffect(() => {
     if (deleting) {
-      const socket = new WebSocket("ws://localhost:3334");
+      const socket = new WebSocket("ws://https://lexart.onrender.com:3334");
 
       socket.onopen = () => {
         console.log("WebSocket connected");
